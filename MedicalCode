@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^ 0.8.0;
+struct doctor{
+string Dname;
+string Qualification;
+string Workplace;
+address doctorid;
+}
+struct patient {
+string Pname;
+uint Page;
+address patientid;
+PMedicine[] mrecord;
+PDisease [] drecord;
+}
+struct medicine {
+uint medicineid;
+string mname;
+string edate;
+uint dose;
+uint price;
+}
+struct PMedicine {
+uint MedId;
+string Medicinename;
+string Patientname;
+address PatientAddress;
+string doctorname;
+address DoctorAddress;
+}
+struct PDisease {
+uint DiseaseID;
+string DiseaseName;
+string Patientname;
+address PatientAddress;
+string doctorname;
+address DoctorAddress;
+}
+struct disease {
+uint diseaseid;
+string diseasename;
+}
+ 
+contract Medical2 {
+
+mapping (address=>doctor) doctor_info;
+mapping (address=>patient) patient_info;
+mapping (uint=>medicine) medicine_info;
+mapping (uint=>disease) disease_info;
+mapping (address=>PMedicine) pmedicine_info;
+mapping (address=>PDisease) Pdisease_info;
+
+function AddDoctor (string memory _Dname, string memory _Dqualification, string memory _DWorkplace,address _doctorid) public {
+require (doctor_info[_doctorid].doctorid!=_doctorid,"This id already exists");
+doctor_info[_doctorid]= doctor (_Dname, _Dqualification, _DWorkplace, _doctorid);
+}
+function ViewDoctor (address _doctorid) public view returns (string memory, string memory, string memory){
+require (doctor_info[_doctorid].doctorid==_doctorid,"This Doctor ID does not exists");
+
+return (doctor_info[_doctorid].Dname,doctor_info[_doctorid].Qualification,doctor_info[_doctorid].Workplace);
+}
+function AddPatient (string memory _Pname, uint _Page, address _patientid) public {
+require (patient_info[_patientid].patientid!=_patientid, "This Patient ID is already exist");
+patient_info[_patientid].Pname=_Pname;
+patient_info[_patientid].Page=_Page;
+patient_info[_patientid].patientid=_patientid;
+
+}
+function ViewPatient (address _patientid) public view returns(string memory, uint){
+require (patient_info[_patientid].patientid == _patientid, "Please Register Patient First");
+return (patient_info[_patientid].Pname, patient_info[_patientid].Page);
+}
+function UpdatePatient (uint _Page, address _patientid) public {
+require (patient_info[_patientid].patientid == _patientid, "Please Register Patient First");
+patient_info[_patientid].Page=_Page;
+}
+function PrescribeMedicine(uint _MedId, address _patientid) public {
+require (doctor_info[msg.sender].doctorid == msg.sender,"Only Doctor can prescribe medicine");
+require (medicine_info[_MedId].medicineid == _MedId, "This Medicine ID/Name does not exist");
+require (patient_info[_patientid].patientid == _patientid, "Please Register Patient First");
+PMedicine memory pmed = PMedicine(_MedId, medicine_info[_MedId].mname,patient_info[_patientid].Pname, _patientid, doctor_info[msg.sender].Dname,msg.sender);
+//mrecord.push(pmed);
+//pmedicine_info [_patientid]= PMedicine(_MedId, medicine_info[_MedId].mname,patient_info[_patientid].Pname, _patientid, doctor_info[msg.sender].Dname,msg.sender);
+ 
+patient_info[_patientid].mrecord.push(pmed);
+}
+
+function ViewPatientRecord (address _patientid) public view returns ( PMedicine[] memory, PDisease [] memory) {
+require (doctor_info[msg.sender].doctorid == msg.sender,"Only Doctor can prescribe medicine");
+require (patient_info[_patientid].patientid == _patientid, "Please Register Patient First"); 
+return (patient_info[_patientid].mrecord, patient_info[_patientid].drecord);
+}
+ 
+// function ViewPatientRecord (address _patientid) public view returns (string memory, uint, string memory, string memory) {
+ 
+// return (patient_info[_patientid].Pname, patient_info[_patientid].Page, pmedicine_info[_patientid].Medicinename, pmedicine_info[_patientid].doctorname);
+// }
+function AddMedicine (uint _medicineid, string memory _mname, string memory _edate, uint _dose, uint _price) public {
+require (medicine_info[_medicineid].medicineid != _medicineid, "This Medicine ID is already exist");
+medicine_info[_medicineid]= medicine (_medicineid, _mname, _edate, _dose,_price);
+}
+function ViewMedicine (uint _medicineid) public view returns (uint, string memory, string memory, uint, uint) {
+require (medicine_info[_medicineid].medicineid == _medicineid, "This Medicine ID does not exist");
+return(medicine_info[_medicineid].medicineid, medicine_info[_medicineid].mname, medicine_info[_medicineid].edate,medicine_info[_medicineid].dose, medicine_info[_medicineid].price);
+}
+function AddDisease (uint _diseaseid, string memory _diseasename) public {
+require (disease_info[_diseaseid].diseaseid != _diseaseid, "This Disease is already exist");
+disease_info[_diseaseid]=disease (_diseaseid, _diseasename);
+}
+function PrescribeDisease (uint _diseaseid, address _patientid) public {
+require (doctor_info[msg.sender].doctorid == msg.sender,"Only Doctor can prescribe medicine");
+require (disease_info[_diseaseid].diseaseid == _diseaseid, "Please Register This Disease First");
+require (patient_info[_patientid].patientid == _patientid, "Please Register Patient First");
+//Pdisease_info[_patientid]= PDisease (_diseaseid,disease_info[_diseaseid].diseasename,patient_info[_patientid].Pname,patient_info[_patientid].patientid,doctor_info[msg.sender].Dname,doctor_info[msg.sender].doctorid);
+ 
+PDisease memory dise = PDisease (_diseaseid,disease_info[_diseaseid].diseasename,patient_info[_patientid].Pname,patient_info[_patientid].patientid,doctor_info[msg.sender].Dname,doctor_info[msg.sender].doctorid);
+//drecord.push(dise);
+patient_info[_patientid].drecord.push(dise);
+}
+}
+
+
